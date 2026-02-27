@@ -1,0 +1,52 @@
+name: "OpenA2A Trust Gate"
+description: "Check AI package dependencies against the OpenA2A Registry trust API and fail CI if any dependency is below the trust threshold."
+
+inputs:
+  min-trust-level:
+    description: "Minimum trust level required (0-4 scale: 0=Blocked, 1=Warning, 2=Listed, 3=Scanned, 4=Verified)"
+    required: false
+    default: "3"
+  fail-on-warning:
+    description: "Whether to fail the check when warning-level packages are found"
+    required: false
+    default: "true"
+  registry-url:
+    description: "OpenA2A Registry API URL"
+    required: false
+    default: "https://registry.opena2a.org"
+  package-file:
+    description: "Path to dependency file (auto-detected if not specified)"
+    required: false
+    default: ""
+
+outputs:
+  result:
+    description: "JSON summary of trust gate findings"
+    value: ${{ steps.trust-check.outputs.result }}
+  safe-count:
+    description: "Number of packages at or above the minimum trust level"
+    value: ${{ steps.trust-check.outputs.safe-count }}
+  warning-count:
+    description: "Number of packages below the minimum trust level but not blocked"
+    value: ${{ steps.trust-check.outputs.warning-count }}
+  blocked-count:
+    description: "Number of blocked packages (trust level 0)"
+    value: ${{ steps.trust-check.outputs.blocked-count }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run OpenA2A Trust Gate
+      id: trust-check
+      shell: bash
+      env:
+        REGISTRY_URL: ${{ inputs.registry-url }}
+        MIN_TRUST_LEVEL: ${{ inputs.min-trust-level }}
+        FAIL_ON_WARNING: ${{ inputs.fail-on-warning }}
+        PACKAGE_FILE: ${{ inputs.package-file }}
+      run: |
+        bash "${{ github.action_path }}/scripts/trust-check.sh"
+
+branding:
+  icon: "shield"
+  color: "blue"
