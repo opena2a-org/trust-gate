@@ -7,6 +7,7 @@
 #   MIN_TRUST_LEVEL   - Minimum required trust level, 0-4 (default: 3)
 #   FAIL_ON_WARNING   - Fail on warning-level packages (default: true)
 #   PACKAGE_FILE      - Path to dependency file (auto-detect if empty)
+#   CHECK_AIM         - Whether to run AIM identity check (default: true)
 #   GITHUB_OUTPUT     - GitHub Actions output file (set automatically by Actions)
 
 set -euo pipefail
@@ -19,8 +20,10 @@ REGISTRY_URL="${REGISTRY_URL:-https://registry.opena2a.org}"
 MIN_TRUST_LEVEL="${MIN_TRUST_LEVEL:-3}"
 FAIL_ON_WARNING="${FAIL_ON_WARNING:-true}"
 PACKAGE_FILE="${PACKAGE_FILE:-}"
+CHECK_AIM="${CHECK_AIM:-true}"
 CURL_TIMEOUT=30
 BATCH_SIZE=100
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -101,6 +104,10 @@ detect_dependency_files() {
     set_output "safe-count" "0"
     set_output "warning-count" "0"
     set_output "blocked-count" "0"
+    if [[ "$CHECK_AIM" == "true" && -f "${SCRIPT_DIR}/aim-check.sh" ]]; then
+      echo ""
+      bash "${SCRIPT_DIR}/aim-check.sh"
+    fi
     exit 0
   fi
 }
@@ -319,6 +326,10 @@ main() {
     set_output "safe-count" "0"
     set_output "warning-count" "0"
     set_output "blocked-count" "0"
+    if [[ "$CHECK_AIM" == "true" && -f "${SCRIPT_DIR}/aim-check.sh" ]]; then
+      echo ""
+      bash "${SCRIPT_DIR}/aim-check.sh"
+    fi
     exit 0
   fi
 
@@ -490,6 +501,18 @@ main() {
   fi
 
   log_info "Trust gate PASSED."
+
+  # ---------------------------------------------------------------------------
+  # AIM Identity Check (inline, when not run as separate step)
+  # ---------------------------------------------------------------------------
+
+  if [[ "$CHECK_AIM" == "true" && -f "${SCRIPT_DIR}/aim-check.sh" ]]; then
+    echo ""
+    echo "---"
+    echo ""
+    bash "${SCRIPT_DIR}/aim-check.sh"
+  fi
+
   exit 0
 }
 
