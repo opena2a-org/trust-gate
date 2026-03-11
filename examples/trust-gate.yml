@@ -1,0 +1,39 @@
+name: Trust Gate
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  trust-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Trust Gate
+        id: trust-gate
+        uses: opena2a-org/trust-gate@v2
+        with:
+          min-trust-level: 3
+          check-aim: true
+          post-comment: true
+
+      - name: Print results
+        if: always()
+        run: |
+          echo "=== Dependency Trust ==="
+          echo "Safe: ${{ steps.trust-gate.outputs.safe-count }}"
+          echo "Warning: ${{ steps.trust-gate.outputs.warning-count }}"
+          echo "Blocked: ${{ steps.trust-gate.outputs.blocked-count }}"
+          echo ""
+          echo "=== AIM Identity ==="
+          echo "AIM Initialized: ${{ steps.trust-gate.outputs.aim-initialized }}"
+          echo "Identities: ${{ steps.trust-gate.outputs.identity-count }}"
+          echo "Policy: ${{ steps.trust-gate.outputs.has-policy }}"
+          echo "Signatures: ${{ steps.trust-gate.outputs.signature-count }}"
+          echo "Governance: ${{ steps.trust-gate.outputs.has-governance }}"
