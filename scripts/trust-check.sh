@@ -3,7 +3,7 @@
 # Checks AI package dependencies against the OpenA2A Registry trust API.
 #
 # Environment variables:
-#   REGISTRY_URL      - OpenA2A Registry API URL (default: https://registry.opena2a.org)
+#   REGISTRY_URL      - OpenA2A Registry API URL (default: https://api.oa2a.org)
 #   MIN_TRUST_LEVEL   - Minimum required trust level, 0-4 (default: 3)
 #   FAIL_ON_WARNING   - Fail on warning-level packages (default: true)
 #   PACKAGE_FILE      - Path to dependency file (auto-detect if empty)
@@ -16,7 +16,7 @@ set -euo pipefail
 # Configuration
 # ---------------------------------------------------------------------------
 
-REGISTRY_URL="${REGISTRY_URL:-https://registry.opena2a.org}"
+REGISTRY_URL="${REGISTRY_URL:-https://api.oa2a.org}"
 MIN_TRUST_LEVEL="${MIN_TRUST_LEVEL:-3}"
 FAIL_ON_WARNING="${FAIL_ON_WARNING:-true}"
 PACKAGE_FILE="${PACKAGE_FILE:-}"
