@@ -13,7 +13,7 @@ inputs:
   registry-url:
     description: "OpenA2A Registry API URL"
     required: false
-    default: "https://registry.opena2a.org"
+    default: "https://api.oa2a.org"
   package-file:
     description: "Path to dependency file (auto-detected if not specified)"
     required: false

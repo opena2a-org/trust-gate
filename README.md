@@ -27,7 +27,7 @@ The action auto-detects dependency files (`package.json`, `requirements.txt`, `p
 |-------|-------------|---------|
 | `min-trust-level` | Minimum trust level required (0-4) | `3` |
 | `fail-on-warning` | Fail the step when packages are below the threshold but not blocked | `true` |
-| `registry-url` | OpenA2A Registry API URL | `https://registry.opena2a.org` |
+| `registry-url` | OpenA2A Registry API URL | `https://api.oa2a.org` |
 | `package-file` | Path to a specific dependency file. If omitted, the action auto-detects supported files in the repository root. | (auto-detect) |
 | `check-aim` | Whether to check AIM agent identity status | `true` |
 | `post-comment` | Post results as a PR comment (requires `GITHUB_TOKEN`) | `true` |
@@ -212,8 +212,8 @@ This is useful for local development or integration into other CI systems.
 ## Links
 
 - [OpenA2A Registry](https://registry.opena2a.org) -- the trust authority for AI packages
-- [OpenA2A Registry API documentation](https://registry.opena2a.org/api/v1)
-- [Trust API: batch endpoint](https://registry.opena2a.org/api/v1/trust/batch)
+- [OpenA2A Registry API documentation](https://api.oa2a.org/api/v1)
+- [Trust API: batch endpoint](https://api.oa2a.org/api/v1/trust/batch)
 - [AIM (Agent Identity Management)](https://github.com/opena2a-org/agent-identity-management)
 - [OpenA2A CLI](https://github.com/opena2a-org/opena2a)
 
