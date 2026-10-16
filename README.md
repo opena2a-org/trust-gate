@@ -66,19 +66,13 @@ jobs:
 | `has-policy` | Whether `policy.json` exists |
 | `has-governance` | Whether `SOUL.md` exists |
 
-## Supported Dependency Files
-
-| File | Ecosystem |
-|------|-----------|
-| `package.json` | npm / Node.js |
-| `requirements.txt` | Python / pip |
-| `pyproject.toml` | Python / PEP 621 |
-
-When no `package-file` is specified, the action auto-detects and processes all supported files found in the repository root.
-
 ## AIM Identity Check
 
 When `check-aim` is enabled, the action verifies: `.opena2a/` initialization, Ed25519 agent identities, `policy.json` capability policy, config tamper-detection signatures, and `SOUL.md` governance. It also detects AI tool artifacts in the PR diff (`.claude/`, `.cursor/`, `.copilot/`, MCP configs, commit metadata).
+
+## Documentation
+
+- [docs/dependency-files.md](docs/dependency-files.md): the dependency files the action reads, and how it auto-detects them.
 
 ## License
 
