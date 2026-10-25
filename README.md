@@ -1,10 +1,13 @@
-> **[OpenA2A](https://github.com/opena2a-org/opena2a)**: [CLI](https://github.com/opena2a-org/opena2a) · [HackMyAgent](https://github.com/opena2a-org/hackmyagent) · [Secretless](https://github.com/opena2a-org/secretless-ai) · [AIM](https://github.com/opena2a-org/agent-identity-management) · [Browser Guard](https://github.com/opena2a-org/AI-BrowserGuard) · [DVAA](https://github.com/opena2a-org/damn-vulnerable-ai-agent)
-
 # OpenA2A Trust Gate
 
-[![Status: stable](https://img.shields.io/badge/status-stable-green)](./STATUS.md)
+[![Status: stable](https://img.shields.io/badge/status-stable-green)](STATUS.md)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-A GitHub Action that checks AI package dependencies against the [OpenA2A Registry](https://registry.opena2a.org) and fails CI if any dependency falls below the configured trust threshold. Also verifies AI agent identity (AIM) status and detects AI tool artifacts in pull requests.
+> **[OpenA2A](https://github.com/opena2a-org)**: [CLI](https://github.com/opena2a-org/opena2a) · [HackMyAgent](https://github.com/opena2a-org/hackmyagent) · [Secretless](https://github.com/opena2a-org/secretless-ai) · [AIM](https://github.com/opena2a-org/agent-identity-management) · [Browser Guard](https://github.com/opena2a-org/ai-browserguard) · [DVAA](https://github.com/opena2a-org/damn-vulnerable-ai-agent)
+
+[Website](https://opena2a.org) · [Discord](https://discord.gg/uRZa3KXgEn)
+
+A GitHub Action that checks AI package dependencies against the OpenA2A Registry and fails CI if any dependency falls below the configured trust threshold. It also verifies AI agent identity (AIM) status and detects AI tool artifacts in pull requests.
 
 ## Usage
 
