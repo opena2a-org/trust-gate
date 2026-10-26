@@ -7,7 +7,7 @@
 
 [Website](https://opena2a.org) · [Discord](https://discord.gg/uRZa3KXgEn)
 
-A GitHub Action that checks AI package dependencies against the OpenA2A Registry and fails CI if any dependency falls below the configured trust threshold. It also verifies AI agent identity (AIM) status and detects AI tool artifacts in pull requests.
+A GitHub Action that checks AI package dependencies against the OpenA2A Registry and fails CI if any dependency falls below the configured trust threshold. With `check-aim`, it also reports which AIM files the repository holds and detects AI tool artifacts in pull requests.
 
 ## Usage
 
@@ -45,7 +45,7 @@ jobs:
 | `fail-on-warning` | Fail when packages are below threshold | `true` |
 | `registry-url` | OpenA2A Registry API URL | `https://api.oa2a.org` |
 | `package-file` | Path to dependency file (auto-detects if omitted) | |
-| `check-aim` | Check AIM agent identity status | `true` |
+| `check-aim` | Report AIM files and AI tool artifacts (see below) | `true` |
 | `post-comment` | Post results as a PR comment | `true` |
 
 ## Trust Levels
@@ -67,13 +67,13 @@ jobs:
 | `warning-count` | Packages below threshold |
 | `blocked-count` | Packages with trust level 0 |
 | `aim-initialized` | Whether `.opena2a/` directory exists |
-| `identity-count` | Number of registered agent identities |
+| `identity-count` | Number of `.json` files in `.opena2a/identities` |
 | `has-policy` | Whether `policy.json` exists |
 | `has-governance` | Whether `SOUL.md` exists |
 
 ## AIM Identity Check
 
-When `check-aim` is enabled, the action verifies: `.opena2a/` initialization, Ed25519 agent identities, `policy.json` capability policy, config tamper-detection signatures, and `SOUL.md` governance. It also detects AI tool artifacts in the PR diff (`.claude/`, `.cursor/`, `.copilot/`, MCP configs, commit metadata).
+When `check-aim` is enabled, the action reports whether `.opena2a/`, `.opena2a/policy.json` and `SOUL.md` (at the root or in `.opena2a/`) exist, and counts the `.json` files in `.opena2a/identities` and the files in `.opena2a/signatures`. It does not read keys or check signatures. It also detects AI tool files among the files the pull request changes (`.claude/`, `.cursor/`, `.copilot/`, MCP configs) and AI tool names in its commits' author and committer fields.
 
 ## Documentation
 
