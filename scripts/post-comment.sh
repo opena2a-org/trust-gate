@@ -155,28 +155,47 @@ COMMENT_BODY+="
 
 log_info "Posting Trust Gate results to PR #${PR_NUMBER}..."
 
-# Look for an existing Trust Gate comment to update
-EXISTING_COMMENT_ID=""
-EXISTING_COMMENT_ID=$(gh api \
-  "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
-  --jq ".[] | select(.body | contains(\"${COMMENT_MARKER}\")) | .id" \
-  2>/dev/null | head -1 || true)
+# The identity this run posts as, read once. A token that may read /user posts
+# as its own login; the default github.token is refused /user and posts as the
+# Actions bot.
+POSTER=$(gh api user --jq .login 2>/dev/null) || POSTER='github-actions[bot]'
+LOGIN_PATTERN='^[A-Za-z0-9-]+(\[bot\])?$'
+if [[ ! "$POSTER" =~ $LOGIN_PATTERN ]]; then
+  POSTER='github-actions[bot]'
+fi
 
-if [[ -n "$EXISTING_COMMENT_ID" ]]; then
-  # Update existing comment
-  gh api \
-    "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments/${EXISTING_COMMENT_ID}" \
+# Look, across every page of the PR's comments, for the newest Trust Gate
+# comment that identity posted. A marker comment posted by anyone else is
+# never updated.
+OWN_COMMENT_ID=""
+OWN_COMMENT_ID=$(gh api --paginate \
+  "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+  --jq ".[] | select(.user.login == \"${POSTER}\" and (.body | contains(\"${COMMENT_MARKER}\"))) | .id" \
+  2>/dev/null | sort -n | tail -n 1 || true)
+
+UPDATED="false"
+if [[ -n "$OWN_COMMENT_ID" ]]; then
+  # Update the Action's own comment
+  if gh api \
+    "repos/${GITHUB_REPOSITORY}/issues/comments/${OWN_COMMENT_ID}" \
     -X PATCH \
     -f body="$COMMENT_BODY" \
-    --silent 2>/dev/null && \
-    log_info "Updated existing comment (ID: ${EXISTING_COMMENT_ID})." || \
-    log_warning "Failed to update existing comment."
-else
-  # Create new comment
-  gh api \
+    --silent 2>/dev/null; then
+    UPDATED="true"
+    log_info "Updated existing comment (ID: ${OWN_COMMENT_ID})."
+  else
+    log_warning "Failed to update existing comment (ID: ${OWN_COMMENT_ID}). Posting a new comment."
+  fi
+fi
+
+if [[ "$UPDATED" != "true" ]]; then
+  # Create new comment: none of the Action's own exists, or its update failed
+  if gh api \
     "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
     -f body="$COMMENT_BODY" \
-    --silent 2>/dev/null && \
-    log_info "Posted new comment on PR #${PR_NUMBER}." || \
+    --silent 2>/dev/null; then
+    log_info "Posted new comment on PR #${PR_NUMBER}."
+  else
     log_warning "Failed to post comment on PR #${PR_NUMBER}."
+  fi
 fi
