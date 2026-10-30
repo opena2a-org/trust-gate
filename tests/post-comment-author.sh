@@ -3,8 +3,9 @@
 # Runs scripts/post-comment.sh against a stub `gh` that serves fixture comment
 # lists and records every call. Checks that the script reads the identity it
 # posts as once, updates a results comment only when that identity posted it,
-# finds that comment across every page of the pull request's comments, and
-# posts a new comment when there is none or when the update fails.
+# finds that comment across every page of the pull request's comments, posts
+# a new comment when there is none or when the update fails, and does not take
+# the API's error text for a comment ID when the comment list cannot be read.
 #
 # The stub is placed first on PATH and no case runs unless `command -v gh`
 # resolves to it. GH_HOST names a host under the reserved .invalid domain, so
@@ -38,14 +39,25 @@ mkdir -p "$work/bin"
 # Stub gh: serves `gh api` only. `GET user` answers with $STUB_LOGIN, or is
 # refused when it is unset, as /user refuses the default github.token. The
 # comment list serves $STUB_FIXTURES/page-N.json: every page with --paginate,
-# the first page without it. A PATCH fails when $STUB_PATCH_FAILS is 1, and
-# any route GitHub does not document answers 404. Every call is recorded in
-# $STUB_LOG as "METHOD PATH".
+# the first page without it, and is refused when $STUB_LIST_FAILS is 1. A
+# PATCH fails when $STUB_PATCH_FAILS is 1, and any route GitHub does not
+# document answers 404. A refusal answers as gh does: the API's error body on
+# stdout, with no --jq filter applied, unless --silent is given; a "gh:" line
+# on stderr; exit 1. Every call is recorded in $STUB_LOG as "METHOD PATH".
 cat > "$work/bin/gh" <<'STUB'
 #!/usr/bin/env bash
 set -uo pipefail
 
 record() { printf '%s\n' "$*" >> "$STUB_LOG"; }
+
+# refuse <status> <message>: the API refused the request; answers as gh does.
+refuse() {
+  if [ "$silent" -ne 1 ]; then
+    jq -n -c --arg message "$2" --arg status "$1" '{message: $message, status: $status}'
+  fi
+  echo "gh: $2 (HTTP $1)" >&2
+  exit 1
+}
 
 if [ "${1:-}" != "api" ]; then
   record "UNSERVED gh $*"
@@ -54,7 +66,7 @@ if [ "${1:-}" != "api" ]; then
 fi
 shift
 
-method="" path="" jq_filter="" paginate=0 has_field=0
+method="" path="" jq_filter="" paginate=0 has_field=0 silent=0
 while [ $# -gt 0 ]; do
   case "$1" in
     -X|--method|-q|--jq|-f|--raw-field|-F|--field)
@@ -69,7 +81,7 @@ while [ $# -gt 0 ]; do
       esac
       shift 2 ;;
     --paginate) paginate=1; shift ;;
-    --silent) shift ;;
+    --silent) silent=1; shift ;;
     -*)
       record "UNSERVED flag $1"
       echo "stub gh: flag $1 is not served" >&2
@@ -96,11 +108,13 @@ fi
 case "$method $path" in
   "GET user")
     if [ -z "${STUB_LOGIN:-}" ]; then
-      echo "gh: Resource not accessible by integration (HTTP 403)" >&2
-      exit 1
+      refuse 403 "Resource not accessible by integration"
     fi
     jq -n -r --arg login "$STUB_LOGIN" "{login: \$login} | ${jq_filter:-.}" ;;
   "GET repos/$STUB_REPO/issues/$STUB_PR/comments")
+    if [ "${STUB_LIST_FAILS:-}" = "1" ]; then
+      refuse 502 "Server Error"
+    fi
     n=1
     while [ -f "$STUB_FIXTURES/page-$n.json" ]; do
       if [ -n "$jq_filter" ]; then
@@ -113,19 +127,16 @@ case "$method $path" in
     done ;;
   "PATCH repos/$STUB_REPO/issues/comments/"*)
     if [ "${STUB_PATCH_FAILS:-}" = "1" ]; then
-      echo "gh: Resource not accessible by integration (HTTP 403)" >&2
-      exit 1
+      refuse 403 "Resource not accessible by integration"
     fi
     if ! jq -e -s --arg id "${path##*/}" 'add // [] | any(.[]; (.id | tostring) == $id)' \
         "$STUB_FIXTURES"/page-*.json >/dev/null 2>&1; then
-      echo "gh: Not Found (HTTP 404)" >&2
-      exit 1
+      refuse 404 "Not Found"
     fi ;;
   "POST repos/$STUB_REPO/issues/$STUB_PR/comments")
     : ;;
   *)
-    echo "gh: Not Found (HTTP 404)" >&2
-    exit 1 ;;
+    refuse 404 "Not Found" ;;
 esac
 STUB
 chmod +x "$work/bin/gh"
@@ -133,7 +144,7 @@ chmod +x "$work/bin/gh"
 PATH="$work/bin:$PATH"
 export PATH
 export GH_HOST="stub.invalid"
-unset STUB_LOGIN STUB_PATCH_FAILS
+unset STUB_LOGIN STUB_LIST_FAILS STUB_PATCH_FAILS
 
 resolved="$(command -v gh || true)"
 [ "$resolved" = "$work/bin/gh" ] ||
@@ -287,6 +298,17 @@ expect_patches "$dir" 1
 expect "$dir" "PATCH repos/$REPO/issues/comments/703" 1
 expect "$dir" "$create" 0
 finish_case "(f) the newest of the Action's own marker comments is the one updated" "$dir"
+
+# (g) The comment list cannot be read, and gh prints the API's error body on
+# stdout. That text is not taken for a comment ID: no update is sent, and the
+# Action posts a new comment.
+dir="$(new_case g)"
+run_case "$dir" STUB_LIST_FAILS=1
+expect "$dir" "GET user" 1
+expect "$dir" "GET repos/$REPO/issues/$PR/comments (paginate)" 1
+expect_patches "$dir" 0
+expect "$dir" "$create" 1
+finish_case "(g) when the comment list cannot be read, no update is sent and the Action posts a new comment" "$dir"
 
 echo "$((total - failed)) of $total cases passed"
 [ "$failed" -eq 0 ] || exit 1

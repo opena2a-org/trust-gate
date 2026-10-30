@@ -166,12 +166,13 @@ fi
 
 # Look, across every page of the PR's comments, for the newest Trust Gate
 # comment that identity posted. A marker comment posted by anyone else is
-# never updated.
+# never updated. Only numeric IDs are kept: when the request fails, gh prints
+# the API's error body on stdout.
 OWN_COMMENT_ID=""
 OWN_COMMENT_ID=$(gh api --paginate \
   "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
   --jq ".[] | select(.user.login == \"${POSTER}\" and (.body | contains(\"${COMMENT_MARKER}\"))) | .id" \
-  2>/dev/null | sort -n | tail -n 1 || true)
+  2>/dev/null | grep -E '^[0-9]+$' | sort -n | tail -n 1 || true)
 
 UPDATED="false"
 if [[ -n "$OWN_COMMENT_ID" ]]; then
