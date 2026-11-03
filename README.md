@@ -44,7 +44,7 @@ jobs:
 
 For a Python project, pass `requirements.txt` in place of `package.json`. A repository without `package.json` runs the same command as `npx -y ai-trust@X.Y.Z audit requirements.txt --min-trust 3`, with `X.Y.Z` the ai-trust release it pins. `audit` does not read `pyproject.toml`.
 
-ai-trust sends anonymous usage telemetry by default. `OPENA2A_TELEMETRY=off` turns it off for a run; [its README](https://github.com/opena2a-org/ai-trust#telemetry) says what is sent.
+ai-trust sends usage telemetry by default, and each event carries an install ID that identifies the machine. `OPENA2A_TELEMETRY=off` turns it off for a run; [its README](https://github.com/opena2a-org/ai-trust#telemetry) says what is sent.
 
 ## Inputs and their counterparts
 
