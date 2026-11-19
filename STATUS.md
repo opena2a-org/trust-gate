@@ -1,7 +1,7 @@
-# Status: stable
+# Status: reference-only
 
-**Stage:** stable
-**Maintenance horizon:** actively maintained through 2026-12-31, status reviewed quarterly
+**Stage:** reference-only
+**Maintenance horizon:** no feature work and no new release from this repository; status reviewed at each change in the table below
 **Maintainer wanted:** no
 
 ## Stage definitions
@@ -16,3 +16,4 @@
 | Date | Stage | Reason |
 |---|---|---|
 | 2026-05-24 | stable | initial STATUS.md (org lifecycle introduction) |
+| 2026-11-19 | reference-only | stage corrected after a release-readiness review: not intended for production use; no new release is cut from this repository. |
